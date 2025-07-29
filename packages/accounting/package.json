@@ -1,0 +1,14 @@
+{
+    "name": "@benevolent/accounting",
+    "version": "0.1.0",
+    "type": "module",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc -b",
+        "test": "node --test dist/tests/*.js"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "typescript": "^5.5.4"
+    }
+}
