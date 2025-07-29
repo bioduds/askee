@@ -6,6 +6,8 @@ const holds = new Map<string, number>();
 
 export function post(entry: LedgerEntry): void {
     if (!Number.isFinite(entry.ccDelta)) throw new Error('Invalid ccDelta');
+    if (!Number.isInteger(entry.ccDelta)) throw new Error('ccDelta must be integer mCC');
+
     ledger.push(entry);
     const bal = balances.get(entry.userIdHash) ?? {
         userIdHash: entry.userIdHash,
@@ -25,6 +27,8 @@ export function post(entry: LedgerEntry): void {
 }
 
 export function reserve(userIdHash: string, amount: number): void {
+    if (!Number.isInteger(amount)) throw new Error('Amount must be integer mCC');
+
     const bal = balances.get(userIdHash);
     if (!bal || bal.ccTotal < amount) throw new Error('Insufficient balance for hold');
     bal.ccTotal -= amount;
@@ -33,12 +37,16 @@ export function reserve(userIdHash: string, amount: number): void {
 }
 
 export function consumeFromHold(userIdHash: string, amount: number): void {
+    if (!Number.isInteger(amount)) throw new Error('Amount must be integer mCC');
+
     const h = holds.get(userIdHash) ?? 0;
     if (h < amount) throw new Error('Insufficient hold');
     holds.set(userIdHash, h - amount);
 }
 
 export function refundHold(userIdHash: string, amount: number, ts: number, id: string) {
+    if (!Number.isInteger(amount)) throw new Error('Amount must be integer mCC');
+
     const h = holds.get(userIdHash) ?? 0;
     if (amount > h) throw new Error('Refund exceeds hold');
     holds.set(userIdHash, h - amount);
@@ -51,4 +59,39 @@ export function getBalance(userIdHash: string): AccountBalance {
     };
 }
 
-export function entries(): ReadonlyArray<LedgerEntry> { return ledger; }
+export function getTotalCirculation(): number {
+    let total = 0;
+    for (const balance of balances.values()) {
+        total += balance.ccTotal;
+    }
+    // Add held amounts
+    for (const hold of holds.values()) {
+        total += hold;
+    }
+    return total;
+}
+
+export function assertConservation(): void {
+    // Conservation check: total in ledger should equal sum of all EARN entries minus sum of all REDEEM entries
+    let earnTotal = 0;
+    let redeemTotal = 0;
+
+    for (const entry of ledger) {
+        if (entry.kind === 'EARN' || entry.kind === 'REFUND') {
+            earnTotal += entry.ccDelta;
+        } else if (entry.kind === 'REDEEM' || entry.kind === 'SLASH') {
+            redeemTotal += Math.abs(entry.ccDelta);
+        }
+    }
+
+    const expectedTotal = earnTotal - redeemTotal;
+    const actualTotal = getTotalCirculation();
+
+    if (Math.abs(expectedTotal - actualTotal) > 1) { // Allow 1 mCC tolerance for rounding
+        throw new Error(`Conservation violation: expected ${expectedTotal} mCC, actual ${actualTotal} mCC`);
+    }
+}
+
+export function entries(): ReadonlyArray<LedgerEntry> {
+    return ledger;
+}

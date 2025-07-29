@@ -6,24 +6,34 @@
 import { CryptoManager } from './crypto/crypto-manager.js';
 import { DiscoveryManager } from './discovery/discovery-manager.js';
 import { ConsentTokenManager } from './core/consent-token-manager.js';
-import { CreditManager } from './core/credit-manager.js';
-import type { ConsentTokenRequest, TaskPermissions, ResourceLimits } from './core/types.js';
+import { LedgerCreditManager } from './core/ledger-credit-manager.js';
+import { SeedManager } from './network/seed-manager.js';
+import { AskeeProtocolManager } from './protocol/askee-protocol-manager.js';
+import { accountId, assertCanonical, logBalance } from './utils/account-utils.js';
+import { canAffordToHold, estimateTaskCost } from './utils/credit-policy.js';
+import type { ConsentTokenRequest, TaskPermissions, ResourceLimits, VerifiedInvitation } from './core/types.js';
+import type { AskeeWorkloadRequest } from './protocol/askee-protocol-types.js';
 
 class AskeeSystem {
     private readonly cryptoManager: CryptoManager;
     private readonly discoveryManager: DiscoveryManager;
-    private readonly creditManager: CreditManager;
+    private readonly creditManager: LedgerCreditManager;
     private readonly consentTokenManager: ConsentTokenManager;
+    private readonly seedManager: SeedManager;
+    private readonly protocolManager: AskeeProtocolManager;
+    private readonly verifiedInvitations: VerifiedInvitation[] = [];
 
     constructor() {
         // Initialize core components
         this.cryptoManager = new CryptoManager();
-        this.creditManager = new CreditManager(this.cryptoManager);
+        this.creditManager = new LedgerCreditManager(this.cryptoManager);
         this.discoveryManager = new DiscoveryManager(this.cryptoManager, {
             domain: 'askee.local',
             wellKnownEndpoint: 'https://askee.local/.well-known/askee',
         });
-        this.consentTokenManager = new ConsentTokenManager(this.cryptoManager, this.creditManager);
+        this.consentTokenManager = new ConsentTokenManager(this.cryptoManager, this.creditManager as any);
+        this.seedManager = new SeedManager(this.cryptoManager, this.discoveryManager, this.creditManager as any);
+        this.protocolManager = new AskeeProtocolManager(this.cryptoManager, this.consentTokenManager, this.creditManager as any);
 
         console.log('🕷️  Askee System Initialized');
         console.log(`Public Key: ${this.cryptoManager.getPublicKeyHex()}`);
@@ -50,6 +60,9 @@ class AskeeSystem {
         }
 
         console.log(`✅ Verified invitation created for ${userId}`);
+
+        // Add to verified invitations store
+        this.verifiedInvitations.push(verifiedInvitation);
 
         // Step 3: User requests consent token
         console.log(`🎫 Step 3: Requesting consent token for ${userId}`);
@@ -114,6 +127,7 @@ class AskeeSystem {
         console.log(`- Total tokens: ${stats.totalTokens}`);
 
         console.log('\n🎉 Workflow demonstration completed successfully!');
+        this.creditManager.printConservation();
     }
 
     /**
@@ -123,14 +137,13 @@ class AskeeSystem {
         console.log('\n👥 Multi-User Scenario Demonstration\n');
 
         const users = ['alice', 'bob', 'charlie'];
-        const verifiedInvitations = [];
 
         // Verify multiple users
         for (const userId of users) {
             await this.discoveryManager.publishDiscoverySignal(userId, 'WebKnown');
             const invitation = await this.discoveryManager.verifyDiscoverySignal(userId, 'WebKnown');
             if (invitation) {
-                verifiedInvitations.push(invitation);
+                this.verifiedInvitations.push(invitation);
                 console.log(`✅ Verified ${userId}`);
             }
         }
@@ -159,7 +172,7 @@ class AskeeSystem {
 
             const token = await this.consentTokenManager.issueConsentToken(
                 tokenRequest,
-                verifiedInvitations
+                this.verifiedInvitations
             );
 
             if (token) {
@@ -174,6 +187,7 @@ class AskeeSystem {
         console.log(`- Active tokens: ${finalStats.activeTokens}`);
 
         console.log('\n✅ Multi-user demonstration completed!');
+        this.creditManager.printConservation();
     }
 
     /**
@@ -182,13 +196,17 @@ class AskeeSystem {
     async demonstrateCreditEconomy(): Promise<void> {
         console.log('\n💰 Credit Economy Demonstration\n');
 
-        // Setup two users: Alice (provider) and Bob (consumer)
-        const alice = 'alice_provider.js';
-        const bob = 'bob_consumer.js';
+        // Setup two users with canonical account IDs
+        const alice = accountId('alice');  // Canonical: "alice" not "alice_provider.js"
+        const bob = accountId('bob');      // Canonical: "bob" not "bob_consumer.js"
+
+        // Validate canonical IDs
+        assertCanonical(alice);
+        assertCanonical(bob);
 
         console.log(`📊 Initial Credit Balances:`);
-        console.log(`- Alice: ${await this.creditManager.getBalance(alice)} credits`);
-        console.log(`- Bob: ${await this.creditManager.getBalance(bob)} credits`);
+        logBalance('Alice', alice, await this.creditManager.getBalance(alice));
+        logBalance('Bob', bob, await this.creditManager.getBalance(bob));
 
         // Alice contributes resources and earns credits
         console.log(`\n🏗️  Alice contributes resources...`);
@@ -207,9 +225,9 @@ class AskeeSystem {
 
         // Check Alice's new balance
         const aliceBalance = await this.creditManager.getBalance(alice);
-        console.log(`📈 Alice's new balance: ${aliceBalance} credits`);
+        logBalance('Alice', alice, aliceBalance);
 
-        // Bob needs to run a task but doesn't have enough credits
+        // Bob needs to run a task but check with proper affordability
         console.log(`\n🔍 Bob wants to run a computational task...`);
         const taskRequirements = {
             CPU: 50,     // 50% CPU
@@ -219,7 +237,11 @@ class AskeeSystem {
         };
 
         const taskDuration = 1800; // 30 minutes
-        const canBobAfford = await this.creditManager.canAffordTask(bob, taskRequirements, taskDuration);
+        const estimatedCost = estimateTaskCost(taskRequirements, taskDuration);
+        console.log(`💰 Estimated task cost: ${estimatedCost} credits`);
+
+        const bobBalanceCheck = await this.creditManager.getBalance(bob);
+        const canBobAfford = bobBalanceCheck.balance >= estimatedCost;
         console.log(`💳 Can Bob afford the task? ${canBobAfford ? 'Yes' : 'No'}`);
 
         if (!canBobAfford) {
@@ -241,19 +263,19 @@ class AskeeSystem {
             console.log(`✅ Bob earned ${bobCreditsEarned} credits for providing storage`);
         }
 
-        // Check if Bob can now afford the task
+        // Check if Bob can now afford the task (use same user ID consistently)
         const bobBalance = await this.creditManager.getBalance(bob);
-        console.log(`📊 Bob's balance: ${bobBalance} credits`);
+        logBalance('Bob', bob, bobBalance);
 
-        const canAffordNow = await this.creditManager.canAffordTask(bob, taskRequirements, taskDuration);
+        const canAffordNow = bobBalance.balance >= estimatedCost;
         console.log(`💳 Can Bob afford the task now? ${canAffordNow ? 'Yes' : 'No'}`);
 
         if (canAffordNow) {
-            // Bob executes the task
+            // Bob executes the task (use consistent account ID)
             console.log(`\n⚡ Bob executes his computational task...`);
             const consumption = {
                 taskId: 'task_ml_training_001',
-                userId: bob,
+                userId: bob,  // Use canonical bob, not bob_consumer.js
                 nodeId: 'alice_node_1', // Running on Alice's node
                 resourceType: 'CPU',
                 amountConsumed: 2, // 2 CPU cores
@@ -268,7 +290,7 @@ class AskeeSystem {
                 // Alice gets credits for hosting the task
                 const hostingContribution = {
                     nodeId: 'alice_node_1',
-                    userId: alice,
+                    userId: alice,  // Use canonical alice
                     resourceType: 'CPU',
                     amountProvided: 2,
                     duration: taskDuration / 1000,
@@ -281,12 +303,12 @@ class AskeeSystem {
             }
         }
 
-        // Final balances
+        // Final balances with proper logging
         console.log(`\n📊 Final Credit Balances:`);
         const finalAliceBalance = await this.creditManager.getBalance(alice);
         const finalBobBalance = await this.creditManager.getBalance(bob);
-        console.log(`- Alice: ${finalAliceBalance} credits`);
-        console.log(`- Bob: ${finalBobBalance} credits`);
+        logBalance('Alice', alice, finalAliceBalance);
+        logBalance('Bob', bob, finalBobBalance);
 
         // Show network statistics
         console.log(`\n📈 Network Economy Statistics:`);
@@ -297,6 +319,175 @@ class AskeeSystem {
         console.log(`- Average contribution rate: ${stats.averageContributionRate.toFixed(2)} credits/hour`);
 
         console.log('\n🎉 Credit economy demonstration completed successfully!');
+        this.creditManager.printConservation();
+    }
+
+    /**
+     * Demonstrate agent-based AI workload processing with proper credit validation
+     */
+    async demonstrateAskeeProtocol(): Promise<void> {
+        console.log('\n🤖 Askee Protocol Demonstration - Agent-Based AI Workloads\n');
+
+        // Set up canonical user accounts for agent owners
+        const researcherUserId = accountId('researcher');  // Canonical: "researcher"
+        const analystUserId = accountId('analyst');        // Canonical: "analyst"
+
+        // Validate canonical IDs
+        assertCanonical(researcherUserId);
+        assertCanonical(analystUserId);
+
+        // Give agent owners initial credits for demonstration
+        console.log('💰 Setting up agent owner credits...');
+
+        // Give researcher bootstrap credits
+        await this.creditManager.earnCredits({
+            nodeId: 'bootstrap_node',
+            userId: researcherUserId,
+            resourceType: 'Bootstrap',
+            amountProvided: 500, // Bootstrap contribution
+            duration: 1,
+            utilizationRate: 1.0,
+            timestamp: new Date()
+        });
+
+        // Give analyst bootstrap credits  
+        await this.creditManager.earnCredits({
+            nodeId: 'bootstrap_node',
+            userId: analystUserId,
+            resourceType: 'Bootstrap',
+            amountProvided: 300, // Bootstrap contribution
+            duration: 1,
+            utilizationRate: 1.0,
+            timestamp: new Date()
+        });
+
+        logBalance('Researcher', researcherUserId, await this.creditManager.getBalance(researcherUserId));
+        logBalance('Analyst', analystUserId, await this.creditManager.getBalance(analystUserId));
+
+        // Register AI agents for different users
+        console.log('\n=== Agent Registration ===');
+
+        // Research agent owned by researcher user
+        const researchAgent = await this.protocolManager.registerAgent(
+            'research-agent-001',
+            researcherUserId,               // Owner ID
+            'ed25519-research-key-001',
+            ['research', 'analysis', 'reasoning'],
+            'advanced'
+        );
+        console.log(`✅ Registered: ${researchAgent.agentId} (Owner: ${researcherUserId})`);
+
+        // Analysis agent owned by analyst user
+        const analysisAgent = await this.protocolManager.registerAgent(
+            'analysis-agent-001',
+            analystUserId,                  // Owner ID
+            'ed25519-analysis-key-001',
+            ['data-analysis', 'visualization', 'reporting'],
+            'basic'
+        );
+        console.log(`✅ Registered: ${analysisAgent.agentId} (Owner: ${analystUserId})`);
+
+        // Create workload requests with proper Askee protocol format
+        console.log('\n=== Workload Processing ===');
+
+        // Research workload (researcher's agent processes workload using researcher's credits)
+        const researchRequest: AskeeWorkloadRequest = {
+            header: {
+                version: '1.0.0',
+                networkId: 'askee-mainnet',
+                requestId: 'req_research_001',
+                timestamp: Date.now(),
+                nodeId: 'seed-001',
+                agentId: researchAgent.agentId,
+                signature: 'research-signature-001',
+                nonce: Math.floor(Math.random() * 1000000)
+            },
+            workload: {
+                type: 'inference',
+                modelId: 'llama-3.1-8b',
+                priority: 'high',
+                input: {
+                    prompt: 'Analyze the implications of distributed AI computing for scientific research'
+                },
+                parameters: {
+                    maxTokens: 500,
+                    temperature: 0.3
+                },
+                constraints: {
+                    maxExecutionTime: 60,    // 60 seconds
+                    maxMemoryUsage: 2048,    // 2GB RAM
+                    maxCredits: 100          // 100 credits max
+                }
+            },
+            agent: {
+                id: researchAgent.agentId,
+                type: 'research',
+                capabilities: researchAgent.capabilities,
+                authorization: 'bearer-token-research-001'
+            },
+            consent: {
+                tokenId: 'consent-token-research-001',
+                permissions: ['read', 'analyze', 'process'],
+                expiresAt: Date.now() + 3600000 // 1 hour
+            }
+        };
+
+        // Validate research workload
+        console.log('🔍 Validating research workload...');
+        const researchValidation = await this.protocolManager.validateWorkloadRequest(researchRequest);
+        console.log(`   Validation: ${researchValidation.valid ? 'PASSED' : 'FAILED'}`);
+
+        if (!researchValidation.valid) {
+            console.log(`   ❌ Validation errors: ${researchValidation.errors.join(', ')}`);
+        }
+
+        if (researchValidation.valid) {
+            // Check if researcher can afford the workload using unified policy
+            const resourceRequirements = {
+                CPU: 30,     // 30% CPU
+                RAM: 2048,   // 2GB RAM
+                Storage: 0,  // No storage required
+                Bandwidth: 100 // 100 Mbps
+            };
+            const estimatedCost = estimateTaskCost(resourceRequirements, 60); // 60 seconds
+            console.log(`   💰 Estimated cost: ${estimatedCost} credits`);
+
+            const canAfford = canAffordToHold(researcherUserId, estimatedCost, (id) => this.creditManager.getBalance(id));
+            console.log(`   💳 Can researcher afford workload? ${canAfford ? 'Yes' : 'No'}`);
+
+            if (canAfford) {
+                console.log('⚡ Processing research workload...');
+                const researchResult = await this.protocolManager.processWorkloadRequest(researchRequest);
+
+                if (researchResult.result.success) {
+                    console.log(`✅ Research workload completed successfully`);
+                    console.log(`   📊 Result: Generated research analysis (${researchResult.result.metrics.tokensGenerated || 0} tokens)`);
+                    console.log(`   💰 Credits consumed: ${researchResult.result.metrics.creditsConsumed}`);
+                    console.log(`   ⏱️  Execution time: ${researchResult.result.metrics.executionTime}ms`);
+                } else {
+                    console.log(`❌ Research workload failed: ${researchResult.result.error?.message}`);
+                }
+            } else {
+                console.log('❌ Researcher cannot afford this workload - need more credits');
+            }
+        }
+
+        // Show final credit balances after agent workloads
+        console.log('\n💰 Final agent owner balances:');
+        logBalance('Researcher', researcherUserId, await this.creditManager.getBalance(researcherUserId));
+        logBalance('Analyst', analystUserId, await this.creditManager.getBalance(analystUserId));
+
+        // Show protocol statistics
+        console.log('\n=== Protocol Statistics ===');
+        const stats = this.protocolManager.getProtocolStats();
+        console.log(`Registered agents: ${stats.registeredAgents}`);
+        console.log(`Active workloads: ${stats.activeWorkloads}`);
+        console.log(`Completed workloads: ${stats.completedWorkloads}`);
+        console.log(`Average execution time: ${stats.averageExecutionTime.toFixed(2)}ms`);
+        console.log(`Total network credits spent: ${stats.totalCreditsSpent}`);
+
+        console.log('\n🎉 Askee Protocol demonstration completed!');
+        this.creditManager.printConservation();
     }
 
     /**
@@ -310,7 +501,7 @@ class AskeeSystem {
         return {
             publicKey: this.cryptoManager.getPublicKeyHex(),
             tokenStats: this.consentTokenManager.getTokenStats(),
-            verifiedUsers: 0 // Would count from discovery manager in full implementation
+            verifiedUsers: this.verifiedInvitations.length
         };
     }
 }
@@ -328,6 +519,9 @@ async function main(): Promise<void> {
 
         // Run credit economy demonstration
         await askee.demonstrateCreditEconomy();
+
+        // Run agent workload demonstration
+        await askee.demonstrateAskeeProtocol();
 
         // Show final system status
         console.log('\n🔍 Final System Status:');

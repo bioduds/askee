@@ -113,6 +113,14 @@ export class CryptoManager {
     }
 
     /**
+     * Hash a string using SHA-256
+     */
+    async hashString(input: string): Promise<string> {
+        const hash = sha256(new TextEncoder().encode(input));
+        return Buffer.from(hash).toString('hex');
+    }
+
+    /**
      * Validate token expiration
      */
     isTokenExpired(token: ConsentToken): boolean {

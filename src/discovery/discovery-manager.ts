@@ -118,8 +118,34 @@ export class DiscoveryManager {
         const signedInvitation = await this.cryptoManager.signVerifiedInvitation(invitation);
         this.verifiedInvitations.add(invitationKey);
 
-        console.log(`Verified invitation for ${userId} on ${channel}`);
+        console.log(`✅ Discovery invitation verified for ${userId} on ${channel}`);
         return signedInvitation;
+    }
+
+    /**
+     * Discover a peer by endpoint (for seed node bootstrap)
+     */
+    async discoverPeer(endpoint: string): Promise<any | null> {
+        try {
+            console.log(`Attempting peer discovery at: ${endpoint}`);
+
+            // For now, simulate discovery - in production this would be HTTP/HTTPS request
+            if (endpoint.includes('well-known')) {
+                // Mock successful well-known discovery
+                return {
+                    nodeId: 'discovered-node-' + Math.random().toString(36).substr(2, 9),
+                    publicKey: 'ed25519-discovered-key',
+                    timestamp: new Date(),
+                    endpoint: endpoint.replace('/.well-known/askee', ''),
+                    capabilities: ['cpu', 'memory']
+                };
+            }
+
+            return null;
+        } catch (error) {
+            console.warn(`Peer discovery failed for ${endpoint}:`, error);
+            return null;
+        }
     }
 
     /**
