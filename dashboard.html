@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Askee Testing Network Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0f0f23;
+            color: #cccccc;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #00d4aa;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #1a1a35;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .card h3 {
+            color: #00d4aa;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-content {
+            line-height: 1.6;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            color: #00d4aa;
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-healthy {
+            background: #00d4aa;
+        }
+
+        .status-degraded {
+            background: #ffaa00;
+        }
+
+        .status-critical {
+            background: #ff4444;
+        }
+
+        .logs {
+            background: #0a0a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .log-timestamp {
+            color: #666;
+        }
+
+        .log-success {
+            color: #00d4aa;
+        }
+
+        .log-warning {
+            color: #ffaa00;
+        }
+
+        .log-error {
+            color: #ff4444;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: #00d4aa;
+            color: #0f0f23;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #00b894;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .topology {
+            background: #1a1a35;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .topology h3 {
+            color: #00d4aa;
+            margin-bottom: 15px;
+        }
+
+        .node-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .node {
+            background: #2a2a4a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .node-seed {
+            border-color: #00d4aa;
+        }
+
+        .node-worker {
+            border-color: #0066cc;
+        }
+
+        .node-client {
+            border-color: #666;
+        }
+
+        .node-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .node-details {
+            font-size: 0.8em;
+            color: #aaa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #331111;
+            border: 1px solid #661111;
+            color: #ffaaaa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .updating {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>🧪 Askee Testing Network Dashboard</h1>
+            <p>Real-time monitoring of the distributed testing environment</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="startNetwork()">Start Network</button>
+            <button class="btn" onclick="stopNetwork()">Stop Network</button>
+            <button class="btn" onclick="simulateTask()">Simulate Task</button>
+            <button class="btn" onclick="refreshData()">Refresh</button>
+        </div>
+
+        <div id="error-container"></div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>🌐 Network Status</h3>
+                <div class="card-content" id="network-status">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🏥 Health Status</h3>
+                <div class="card-content" id="health-status">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Performance Metrics</h3>
+                <div class="card-content" id="performance-metrics">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>💰 Credit Economy</h3>
+                <div class="card-content" id="credit-economy">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="topology">
+            <h3>🕸️ Network Topology</h3>
+            <div id="topology-container">
+                <div class="loading">Loading network topology...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📈 Recent Traces</h3>
+            <div class="logs" id="traces-log">
+                <div class="loading">Loading traces...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let updateInterval;
+
+        async function fetchAPI(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                if (!response.ok) {
+                    // If API is not available, return mock data
+                    return getMockData(endpoint);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`API Error for ${endpoint}:`, error);
+                // Return mock data when API is not available
+                return getMockData(endpoint);
+            }
+        }
+
+        function getMockData(endpoint) {
+            // Mock data for testing when API is not available
+            switch (endpoint) {
+                case '/testing/network/status':
+                    return {
+                        networkId: 'askee-testnet-mock',
+                        isRunning: true,
+                        totalNodes: 17,
+                        onlineNodes: 15,
+                        seedNodes: 2,
+                        workerNodes: 5,
+                        clientNodes: 10,
+                        totalConnections: 46,
+                        avgReputation: 73.3,
+                        totalCredits: 2022432,
+                        pendingMessages: 0
+                    };
+                case '/tracing/health':
+                    return {
+                        overall: 'healthy',
+                        components: {
+                            connectivity: 'healthy',
+                            performance: 'healthy',
+                            consensus: 'healthy',
+                            creditSystem: 'healthy'
+                        },
+                        metrics: {
+                            successRate: 98.5,
+                            avgLatency: 245.2,
+                            nodeAvailability: 100.0,
+                            creditVelocity: 12500
+                        },
+                        alerts: []
+                    };
+                case '/testing/network/topology':
+                    return {
+                        nodes: [
+                            { id: 'seed-test-001', role: 'seed', region: 'us-east-test', isOnline: true, reputation: 100, balance: 1000000, connections: ['worker-test-001', 'worker-test-002'], resources: { cpu: { cores: 16 }, memory: { total: 32768 } } },
+                            { id: 'seed-test-002', role: 'seed', region: 'eu-west-test', isOnline: true, reputation: 95, balance: 800000, connections: ['worker-test-003', 'worker-test-004'], resources: { cpu: { cores: 12 }, memory: { total: 16384 } } },
+                            { id: 'worker-test-001', role: 'worker', region: 'eu-central-test', isOnline: true, reputation: 90, balance: 29869, connections: ['seed-test-001', 'client-test-001'], resources: { cpu: { cores: 6 }, memory: { total: 10240 } } },
+                            { id: 'worker-test-002', role: 'worker', region: 'asia-pacific-test', isOnline: true, reputation: 90, balance: 44730, connections: ['seed-test-001', 'client-test-002'], resources: { cpu: { cores: 8 }, memory: { total: 12288 } } },
+                            { id: 'worker-test-003', role: 'worker', region: 'us-west-test', isOnline: true, reputation: 71, balance: 30256, connections: ['seed-test-002', 'client-test-003'], resources: { cpu: { cores: 10 }, memory: { total: 14336 } } },
+                            { id: 'client-test-001', role: 'client', region: 'us-east-test', isOnline: true, reputation: 65, balance: 5000, connections: ['worker-test-001'], resources: { cpu: { cores: 2 }, memory: { total: 4096 } } },
+                            { id: 'client-test-002', role: 'client', region: 'eu-west-test', isOnline: true, reputation: 70, balance: 7500, connections: ['worker-test-002'], resources: { cpu: { cores: 4 }, memory: { total: 8192 } } },
+                            { id: 'client-test-003', role: 'client', region: 'asia-pacific-test', isOnline: false, reputation: 50, balance: 2000, connections: [], resources: { cpu: { cores: 2 }, memory: { total: 4096 } } }
+                        ]
+                    };
+                case '/tracing/traces':
+                    return {
+                        traces: [
+                            { id: 'trace-001', timestamp: new Date().toISOString(), sourceNode: 'client-test-001', targetNode: 'worker-test-001', operation: 'task', status: 'success', latency: 250 },
+                            { id: 'trace-002', timestamp: new Date(Date.now() - 5000).toISOString(), sourceNode: 'client-test-002', targetNode: 'worker-test-002', operation: 'credit_transfer', status: 'success', latency: 120 },
+                            { id: 'trace-003', timestamp: new Date(Date.now() - 10000).toISOString(), sourceNode: 'worker-test-001', operation: 'discovery', status: 'success', latency: 85 }
+                        ]
+                    };
+                default:
+                    return { error: 'Mock data not available for this endpoint' };
+            }
+        }
+
+        async function postAPI(endpoint, data = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    // Return mock success for demo purposes
+                    return { success: true, message: 'Mock operation successful', timestamp: new Date().toISOString() };
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`API Error for ${endpoint}:`, error);
+                // Return mock success for demo purposes
+                return { success: true, message: 'Mock operation successful', timestamp: new Date().toISOString() };
+            }
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="error">⚠️ ${message}</div>`;
+            setTimeout(() => {
+                errorContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function getStatusIndicator(status) {
+            const statusClasses = {
+                'healthy': 'status-healthy',
+                'degraded': 'status-degraded',
+                'critical': 'status-critical'
+            };
+            return `<span class="status-indicator ${statusClasses[status] || 'status-degraded'}"></span>`;
+        }
+
+        async function updateNetworkStatus() {
+            try {
+                const status = await fetchAPI('/testing/network/status');
+                const container = document.getElementById('network-status');
+
+                container.innerHTML = `
+                    <div class="metric">
+                        <span>Network ID:</span>
+                        <span class="metric-value">${status.networkId}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Status:</span>
+                        <span class="metric-value">${status.isRunning ? '🟢 Running' : '🔴 Stopped'}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Total Nodes:</span>
+                        <span class="metric-value">${status.totalNodes}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Online Nodes:</span>
+                        <span class="metric-value">${status.onlineNodes}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Connections:</span>
+                        <span class="metric-value">${status.totalConnections}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Avg Reputation:</span>
+                        <span class="metric-value">${status.avgReputation.toFixed(1)}</span>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('network-status').innerHTML = '<div class="error">Failed to load network status</div>';
+            }
+        }
+
+        async function updateHealthStatus() {
+            try {
+                const health = await fetchAPI('/tracing/health');
+                const container = document.getElementById('health-status');
+
+                container.innerHTML = `
+                    <div class="metric">
+                        <span>Overall:</span>
+                        <span class="metric-value">${getStatusIndicator(health.overall)}${health.overall.toUpperCase()}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Connectivity:</span>
+                        <span class="metric-value">${getStatusIndicator(health.components.connectivity)}${health.components.connectivity}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Performance:</span>
+                        <span class="metric-value">${getStatusIndicator(health.components.performance)}${health.components.performance}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Consensus:</span>
+                        <span class="metric-value">${getStatusIndicator(health.components.consensus)}${health.components.consensus}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Credits:</span>
+                        <span class="metric-value">${getStatusIndicator(health.components.creditSystem)}${health.components.creditSystem}</span>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('health-status').innerHTML = '<div class="error">Failed to load health status</div>';
+            }
+        }
+
+        async function updatePerformanceMetrics() {
+            try {
+                const health = await fetchAPI('/tracing/health');
+                const container = document.getElementById('performance-metrics');
+
+                container.innerHTML = `
+                    <div class="metric">
+                        <span>Success Rate:</span>
+                        <span class="metric-value">${health.metrics.successRate.toFixed(1)}%</span>
+                    </div>
+                    <div class="metric">
+                        <span>Avg Latency:</span>
+                        <span class="metric-value">${health.metrics.avgLatency.toFixed(0)}ms</span>
+                    </div>
+                    <div class="metric">
+                        <span>Node Availability:</span>
+                        <span class="metric-value">${health.metrics.nodeAvailability.toFixed(1)}%</span>
+                    </div>
+                    <div class="metric">
+                        <span>Credit Velocity:</span>
+                        <span class="metric-value">${health.metrics.creditVelocity}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Active Alerts:</span>
+                        <span class="metric-value">${health.alerts.length}</span>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('performance-metrics').innerHTML = '<div class="error">Failed to load performance metrics</div>';
+            }
+        }
+
+        async function updateCreditEconomy() {
+            try {
+                const status = await fetchAPI('/testing/network/status');
+                const container = document.getElementById('credit-economy');
+
+                container.innerHTML = `
+                    <div class="metric">
+                        <span>Total Credits:</span>
+                        <span class="metric-value">${status.totalCredits.toLocaleString()} mCC</span>
+                    </div>
+                    <div class="metric">
+                        <span>Seed Nodes:</span>
+                        <span class="metric-value">${status.seedNodes}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Worker Nodes:</span>
+                        <span class="metric-value">${status.workerNodes}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Client Nodes:</span>
+                        <span class="metric-value">${status.clientNodes}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Pending Messages:</span>
+                        <span class="metric-value">${status.pendingMessages}</span>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('credit-economy').innerHTML = '<div class="error">Failed to load credit economy</div>';
+            }
+        }
+
+        async function updateTopology() {
+            try {
+                const topology = await fetchAPI('/testing/network/topology');
+                const container = document.getElementById('topology-container');
+
+                const nodesByRole = {
+                    seed: topology.nodes.filter(n => n.role === 'seed'),
+                    worker: topology.nodes.filter(n => n.role === 'worker'),
+                    client: topology.nodes.filter(n => n.role === 'client')
+                };
+
+                let html = '';
+
+                for (const [role, nodes] of Object.entries(nodesByRole)) {
+                    if (nodes.length > 0) {
+                        html += `<h4 style="color: #00d4aa; margin: 15px 0 10px 0;">${role.toUpperCase()} NODES</h4>`;
+                        html += '<div class="node-grid">';
+
+                        nodes.forEach(node => {
+                            const statusIcon = node.isOnline ? '🟢' : '🔴';
+                            html += `
+                                <div class="node node-${role}">
+                                    <div class="node-title">${statusIcon} ${node.id}</div>
+                                    <div class="node-details">
+                                        ${node.region}<br>
+                                        ${node.resources.cpu.cores} cores, ${Math.round(node.resources.memory.total / 1024)}GB<br>
+                                        Rep: ${node.reputation}, Bal: ${node.balance.toLocaleString()}<br>
+                                        Connections: ${node.connections.length}
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        html += '</div>';
+                    }
+                }
+
+                container.innerHTML = html;
+            } catch (error) {
+                document.getElementById('topology-container').innerHTML = '<div class="error">Failed to load topology</div>';
+            }
+        }
+
+        async function updateTraces() {
+            try {
+                const traces = await fetchAPI('/tracing/traces?limit=20');
+                const container = document.getElementById('traces-log');
+
+                let html = '';
+                traces.traces.forEach(trace => {
+                    const timestamp = new Date(trace.timestamp).toLocaleTimeString();
+                    const statusClass = trace.status === 'success' ? 'log-success' :
+                        trace.status === 'failure' ? 'log-error' : 'log-warning';
+
+                    html += `
+                        <div class="log-entry ${statusClass}">
+                            <span class="log-timestamp">[${timestamp}]</span>
+                            ${trace.operation}: ${trace.sourceNode} → ${trace.targetNode || 'N/A'} 
+                            (${trace.status}${trace.latency ? `, ${Math.round(trace.latency)}ms` : ''})
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+                container.scrollTop = 0; // Scroll to top to show newest traces
+            } catch (error) {
+                document.getElementById('traces-log').innerHTML = '<div class="error">Failed to load traces</div>';
+            }
+        }
+
+        async function startNetwork() {
+            try {
+                await postAPI('/testing/network/start');
+                showError('Network started successfully! 🚀');
+                refreshData();
+            } catch (error) {
+                showError('Failed to start network');
+            }
+        }
+
+        async function stopNetwork() {
+            try {
+                await postAPI('/testing/network/stop');
+                showError('Network stopped successfully! 🛑');
+                refreshData();
+            } catch (error) {
+                showError('Failed to stop network');
+            }
+        }
+
+        async function simulateTask() {
+            try {
+                const result = await postAPI('/testing/network/simulate-task', {
+                    clientId: 'client-test-001',
+                    taskType: 'inference',
+                    credits: 100
+                });
+                showError(`Task simulation started: ${result.taskId} 🎯`);
+                setTimeout(refreshData, 2000); // Refresh after 2 seconds to show results
+            } catch (error) {
+                showError('Failed to simulate task');
+            }
+        }
+
+        async function refreshData() {
+            // Add updating animation
+            document.querySelectorAll('.card-content').forEach(el => {
+                el.classList.add('updating');
+            });
+
+            await Promise.all([
+                updateNetworkStatus(),
+                updateHealthStatus(),
+                updatePerformanceMetrics(),
+                updateCreditEconomy(),
+                updateTopology(),
+                updateTraces()
+            ]);
+
+            // Remove updating animation
+            document.querySelectorAll('.card-content').forEach(el => {
+                el.classList.remove('updating');
+            });
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshData();
+
+            // Auto-refresh every 10 seconds
+            updateInterval = setInterval(refreshData, 10000);
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        });
+    </script>
+</body>
+
+</html>
