@@ -3,16 +3,16 @@
  * Main entry point demonstrating the core functionality
  */
 
-import { CryptoManager } from './crypto/crypto-manager.js';
-import { DiscoveryManager } from './discovery/discovery-manager.js';
-import { ConsentTokenManager } from './core/consent-token-manager.js';
-import { LedgerCreditManager } from './core/ledger-credit-manager.js';
-import { SeedManager } from './network/seed-manager.js';
-import { AskeeProtocolManager } from './protocol/askee-protocol-manager.js';
-import { accountId, assertCanonical, logBalance } from './utils/account-utils.js';
-import { canAffordToHold, estimateTaskCost } from './utils/credit-policy.js';
-import type { ConsentTokenRequest, TaskPermissions, ResourceLimits, VerifiedInvitation } from './core/types.js';
-import type { AskeeWorkloadRequest } from './protocol/askee-protocol-types.js';
+import { CryptoManager } from './crypto/crypto-manager';
+import { DiscoveryManager } from './discovery/discovery-manager';
+import { ConsentTokenManager } from './core/consent-token-manager';
+import { LedgerCreditManager } from './core/ledger-credit-manager';
+import { SeedManager } from './network/seed-manager';
+import { AskeeProtocolManager } from './protocol/askee-protocol-manager';
+import { accountId, assertCanonical, logBalance } from './utils/account-utils';
+import { canAffordToHold, estimateTaskCost } from './utils/credit-policy';
+import type { ConsentTokenRequest, TaskPermissions, ResourceLimits, VerifiedInvitation } from './core/types';
+import type { AskeeWorkloadRequest } from './protocol/askee-protocol-types';
 
 class AskeeSystem {
     private readonly cryptoManager: CryptoManager;
@@ -46,7 +46,7 @@ class AskeeSystem {
         console.log('\n🚀 Starting Askee Workflow Demonstration\n');
 
         // Step 1: User publishes discovery signal
-        const userId = 'user123.js';
+        const userId = 'user123';
         console.log(`📡 Step 1: Publishing discovery signal for ${userId}`);
         await this.discoveryManager.publishDiscoverySignal(userId, 'DNS');
 
@@ -537,6 +537,6 @@ async function main(): Promise<void> {
 export { AskeeSystem };
 
 // Run if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (require.main === module) {
     main();
 }

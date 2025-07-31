@@ -5,10 +5,10 @@ import type {
     AgentRegistration,
     ModelAccessControl,
     NetworkWorkloadPolicy
-} from './askee-protocol-types.js';
-import type { CryptoManager } from '../crypto/crypto-manager.js';
-import type { ConsentTokenManager } from '../core/consent-token-manager.js';
-import type { CreditManager } from '../core/credit-manager.js';
+} from './askee-protocol-types';
+import type { CryptoManager } from '../crypto/crypto-manager';
+import type { ConsentTokenManager } from '../core/consent-token-manager';
+import type { CreditManager } from '../core/credit-manager';
 
 /**
  * Askee Protocol Manager - Handles protocol validation, agent authorization, and workload routing

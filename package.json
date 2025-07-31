@@ -1,37 +1,39 @@
 {
-  "name": "askee",
+  "name": "askee-ai-network",
   "version": "1.0.0",
-  "description": "Benevolent Spider Distributed Agent System - Consensual distributed computing with cryptographic consent tokens",
+  "description": "Distributed AI hosting network with Ollama integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cd frontend && npm run build",
     "dev": "ts-node src/index.ts",
-    "server": "node dist/server.js",
+    "dev:node": "ts-node src/node-agent.ts",
+    "dev:orchestrator": "ts-node src/orchestrator.ts",
+    "start": "node dist/index.js",
+    "start:node": "node dist/node-agent.js",
+    "start:orchestrator": "node dist/orchestrator.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
-    "clean": "rm -rf dist",
-    "start": "node dist/index.js"
+    "clean": "rm -rf dist"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bioduds/askee.git"
   },
   "keywords": [
-    "distributed-computing",
-    "consent-tokens",
-    "byzantine-fault-tolerance",
-    "sandboxing",
-    "cryptography",
-    "ed25519",
-    "opt-in-discovery"
+    "ai",
+    "distributed",
+    "ollama",
+    "llm",
+    "hosting",
+    "network",
+    "machine-learning"
   ],
   "author": "Askee Team",
   "license": "MIT",
-  "type": "module",
   "bugs": {
     "url": "https://github.com/bioduds/askee/issues"
   },
@@ -39,6 +41,16 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^24.1.0",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/ws": "^8.5.10",
+    "@types/pg": "^8.10.9",
+    "@types/uuid": "^9.0.7",
+    "@types/joi": "^17.2.3",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/compression": "^1.7.5",
+    "@types/multer": "^1.4.11",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "eslint": "^9.32.0",
@@ -50,10 +62,22 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@noble/ed25519": "^2.3.0",
-    "@noble/hashes": "^1.8.0",
-    "@types/express": "^5.0.3",
-    "express": "^5.1.0",
-    "sodium-native": "^5.0.6"
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "axios": "^1.6.2",
+    "ws": "^8.14.2",
+    "pg": "^8.11.3",
+    "redis": "^4.6.10",
+    "uuid": "^9.0.1",
+    "joi": "^17.11.0",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "rate-limiter-flexible": "^2.4.2",
+    "node-cron": "^3.0.3",
+    "compression": "^1.7.4",
+    "multer": "^1.4.5-lts.1"
   }
 }

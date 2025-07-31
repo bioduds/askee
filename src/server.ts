@@ -5,17 +5,17 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
 import { readFileSync } from 'fs';
-import { CryptoManager } from './crypto/crypto-manager.js';
-import { DiscoveryManager } from './discovery/discovery-manager.js';
-import { ConsentTokenManager } from './core/consent-token-manager.js';
-import { LedgerCreditManager, CreditUsage } from './core/ledger-credit-manager.js';
-import { SeedManager } from './network/seed-manager.js';
-import { AskeeProtocolManager } from './protocol/askee-protocol-manager.js';
-import { TestingNetwork } from './network/testing-network.js';
-import { NetworkTracer } from './network/network-tracer.js';
-import { accountId, assertCanonical, logBalance } from './utils/account-utils.js';
-import { canAffordToHold, estimateTaskCost } from './utils/credit-policy.js';
-import type { ConsentTokenRequest, TaskPermissions, ResourceLimits, VerifiedInvitation } from './core/types.js';
+import { CryptoManager } from './crypto/crypto-manager';
+import { DiscoveryManager } from './discovery/discovery-manager';
+import { ConsentTokenManager } from './core/consent-token-manager';
+import { LedgerCreditManager, CreditUsage } from './core/ledger-credit-manager';
+import { SeedManager } from './network/seed-manager';
+import { AskeeProtocolManager } from './protocol/askee-protocol-manager';
+import { TestingNetwork } from './network/testing-network';
+import { NetworkTracer } from './network/network-tracer';
+import { accountId, assertCanonical, logBalance } from './utils/account-utils';
+import { canAffordToHold, estimateTaskCost } from './utils/credit-policy';
+import type { ConsentTokenRequest, TaskPermissions, ResourceLimits, VerifiedInvitation } from './core/types';
 
 class AskeeServer {
     private readonly app: express.Application;
@@ -78,7 +78,7 @@ class AskeeServer {
     private async initializeSpiderManager(): Promise<void> {
         try {
             // Use a more compatible import approach
-            const spiderPath = './spider/web-spider-manager.js';
+            const spiderPath = './spider/web-spider-manager';
             const spiderModule = await import(spiderPath);
 
             if (spiderModule.WebSpiderManager) {
@@ -801,7 +801,7 @@ class AskeeServer {
 }
 
 // Start the server if this file is run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (require.main === module) {
     const server = new AskeeServer();
     server.start();
 }

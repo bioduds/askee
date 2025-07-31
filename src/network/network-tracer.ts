@@ -3,7 +3,7 @@
  */
 
 import { EventEmitter } from 'events';
-import type { NetworkTrace } from './testing-network.js';
+import type { NetworkTrace } from './testing-network';
 
 export interface TraceFilter {
     nodeId?: string;

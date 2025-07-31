@@ -2,7 +2,7 @@
  * Account utilities for canonical IDs and balance formatting
  */
 
-import { fromMilliCredits } from './credit-policy.js';
+import { fromMilliCredits } from './credit-policy';
 
 /**
  * Canonicalize account IDs - removes file extensions and descriptors
@@ -16,7 +16,7 @@ export function accountId(userLike: string): string {
  * Assert canonical account ID format
  */
 export function assertCanonical(userId: string): void {
-    if (userId.includes('.js') || userId.includes('_')) {
+    if (userId.includes('') || userId.includes('_')) {
         throw new Error(`Non-canonical userId: ${userId}. Use accountId() to normalize.`);
     }
 }

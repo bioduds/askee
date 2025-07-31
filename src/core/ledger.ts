@@ -3,7 +3,7 @@
  * Copy of packages/accounting/src/ledger.ts for src directory
  */
 
-import { LedgerEntry, EntryKind, AccountBalance } from './ledger-types.js';
+import { LedgerEntry, EntryKind, AccountBalance } from './ledger-types';
 
 export class Ledger {
     private entries: LedgerEntry[] = [];

@@ -5,8 +5,8 @@
 
 import { promises as dns } from 'dns';
 import { createHash } from 'crypto';
-import type { DiscoveryChannel, VerifiedInvitation } from '../core/types.js';
-import { CryptoManager } from '../crypto/crypto-manager.js';
+import type { DiscoveryChannel, VerifiedInvitation } from '../core/types';
+import { CryptoManager } from '../crypto/crypto-manager';
 
 export interface DiscoverySignal {
     userId: string;

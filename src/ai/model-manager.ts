@@ -5,9 +5,9 @@ import type {
     ModelDeploymentRequest,
     ModelDeploymentResponse,
     SeedNode
-} from '../network/seed-types.js';
-import type { CryptoManager } from '../crypto/crypto-manager.js';
-import type { CreditManager } from '../core/credit-manager.js';
+} from '../network/seed-types';
+import type { CryptoManager } from '../crypto/crypto-manager';
+import type { CreditManager } from '../core/credit-manager';
 
 /**
  * AI Model Manager - Handles model deployment, capability matching, and inference routing

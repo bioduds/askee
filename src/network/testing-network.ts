@@ -3,11 +3,11 @@
  */
 
 import { EventEmitter } from 'events';
-import { CryptoManager } from '../crypto/crypto-manager.js';
-import { DiscoveryManager } from '../discovery/discovery-manager.js';
-import { LedgerCreditManager } from '../core/ledger-credit-manager.js';
-import { SeedManager } from './seed-manager.js';
-import type { VerifiedInvitation } from '../core/types.js';
+import { CryptoManager } from '../crypto/crypto-manager';
+import { DiscoveryManager } from '../discovery/discovery-manager';
+import { LedgerCreditManager } from '../core/ledger-credit-manager';
+import { SeedManager } from './seed-manager';
+import type { VerifiedInvitation } from '../core/types';
 
 export interface TestNode {
     id: string;

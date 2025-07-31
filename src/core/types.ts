@@ -48,7 +48,7 @@ export interface VerifiedInvitation {
 
 export interface NodeProfile {
     nodeId: string;
-    osType: 'linux' | 'windows' | 'macos.js';
+    osType: 'linux' | 'windows' | 'macos';
     cpuCores: number;
     memoryMB: number;
     storageGB: number;
@@ -59,9 +59,9 @@ export interface NodeProfile {
 
 export interface SandboxConfig {
     nodeId: string;
-    osType: 'linux' | 'windows' | 'macos.js';
+    osType: 'linux' | 'windows' | 'macos';
     limits: ResourceLimits;
-    securityPolicy: 'strict' | 'permissive.js';
+    securityPolicy: 'strict' | 'permissive';
     monitoringEnabled: boolean;
     containerConfig?: LinuxContainerConfig | WindowsJobConfig | MacOSTaskConfig;
 }
@@ -101,16 +101,16 @@ export interface TaskResult {
     result: any;
     executionTime: number;
     resourceUsage: ResourceLimits;
-    status: 'success' | 'failure' | 'timeout.js';
+    status: 'success' | 'failure' | 'timeout';
     timestamp: Date;
 }
 
 export interface SecurityViolation {
     nodeId: string;
-    violationType: 'unauthorized_access' | 'resource_violation' | 'process_violation.js';
+    violationType: 'unauthorized_access' | 'resource_violation' | 'process_violation';
     details: string;
     timestamp: Date;
-    severity: 'low' | 'medium' | 'high' | 'critical.js';
+    severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
 export enum NodeState {

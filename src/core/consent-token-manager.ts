@@ -9,9 +9,9 @@ import type {
     TaskPermissions,
     ResourceLimits,
     VerifiedInvitation
-} from './types.js';
-import { CryptoManager } from '../crypto/crypto-manager.js';
-import { CreditManager } from './credit-manager.js';
+} from './types';
+import { CryptoManager } from '../crypto/crypto-manager';
+import { CreditManager } from './credit-manager';
 
 export class ConsentTokenManager {
     private cryptoManager: CryptoManager;

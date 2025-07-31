@@ -4,12 +4,12 @@
  * All amounts are in milli-credits (mCC) internally
  */
 
-import type { CryptoManager } from '../crypto/crypto-manager.js';
-import { Ledger } from './ledger.js';
-import { LedgerEntry, AccountBalance } from './ledger-types.js';
-import { toMilliCredits, fromMilliCredits, ECON_POLICY } from '../utils/credit-policy.js';
-import { accountId } from '../utils/account-utils.js';
-import type { ResourceContribution, ResourceConsumption, CreditBalance } from './credit-types.js';
+import type { CryptoManager } from '../crypto/crypto-manager';
+import { Ledger } from './ledger';
+import { LedgerEntry, AccountBalance } from './ledger-types';
+import { toMilliCredits, fromMilliCredits, ECON_POLICY } from '../utils/credit-policy';
+import { accountId } from '../utils/account-utils';
+import type { ResourceContribution, ResourceConsumption, CreditBalance } from './credit-types';
 
 export interface CreditReservation {
     userIdHash: string;

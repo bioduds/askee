@@ -1,8 +1,8 @@
-import type { SeedNode, NetworkBootstrap, PeerDiscoveryResponse } from './seed-types.js';
-import type { CryptoManager } from '../crypto/crypto-manager.js';
-import type { DiscoveryManager } from '../discovery/discovery-manager.js';
-import { AIModelManager } from '../ai/model-manager.js';
-import type { CreditManager } from '../core/credit-manager.js';
+import type { SeedNode, NetworkBootstrap, PeerDiscoveryResponse } from './seed-types';
+import type { CryptoManager } from '../crypto/crypto-manager';
+import type { DiscoveryManager } from '../discovery/discovery-manager';
+import { AIModelManager } from '../ai/model-manager';
+import type { CreditManager } from '../core/credit-manager';
 
 /**
  * Seed Manager - Handles network bootstrap and peer discovery

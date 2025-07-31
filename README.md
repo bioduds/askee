@@ -1,69 +1,66 @@
-# Askee - Benevolent Spider Distributed Agent System
+# Askee AI Network
 
-🕷️ A consensual distributed computing platform with cryptographic consent tokens and credit-based resource sharing.
+🤖 A distributed AI hosting network where users contribute AI models and access collective intelligence through dynamic orchestration.
 
 ## Overview
 
-Askee implements a **consensual distributed computing system** where users can voluntarily share their idle computing resources and earn credits, which they can then spend to run computational tasks on the network. The system ensures **explicit consent** at every step through cryptographic tokens and maintains **economic incentives** through a credit-based economy.
+Askee is a **distributed AI hosting network** that allows users to host AI models locally using Ollama while sharing access to a collective network of AI capabilities. Users can run AI models on their own machines and, when their local resources are insufficient, seamlessly access models hosted by other network participants.
 
 ### Key Features
 
-- 🔐 **Cryptographic Consent Tokens** - Ed25519-signed tokens ensuring explicit user consent
-- 🕸️ **Opt-in Discovery System** - DNS TXT records, Well-known URLs, and QR codes for network discovery
-- 💰 **Credit Economy** - Users earn credits by sharing resources and spend credits to consume resources
-- 🏗️ **OS-specific Sandboxing** - Secure execution environments with resource limits
-- ⚖️ **Formal Verification** - TLA+ specification ensuring system correctness and safety
-- 🔄 **Byzantine Fault Tolerance** - Redundant verification and reputation-based task distribution
+- 🤖 **Local AI Hosting** - Run AI models locally using Ollama integration
+- 🌐 **Network Intelligence** - Access AI models from other network participants  
+- ⚡ **Dynamic Orchestration** - Automatically route requests to the best available node
+- 📊 **Real-time Monitoring** - Web dashboard for node status and network health
+- 🔄 **Automatic Discovery** - Nodes automatically find and connect to each other
+- 💬 **Chat Interface** - Browser-based chat interface using the network
+- 📈 **Performance Metrics** - Track request success rates, response times, and node loads
 
 ## Architecture
 
-The system is built on several core principles:
+The system is built around the concept of **AI hosting nodes** that each run:
 
-1. **Explicit Consent**: Every resource sharing action requires a cryptographically signed consent token
-2. **Economic Incentives**: Users are rewarded with credits for contributing resources
-3. **Security First**: All operations are sandboxed with strict resource limits
-4. **Formal Verification**: TLA+ specification ensures correctness of the distributed protocol
+1. **Ollama Service**: Hosts AI models locally (LLaMA, Mistral, CodeLlama, etc.)
+2. **Node Agent**: Manages the node, handles requests, and discovers other nodes
+3. **React Frontend**: Web interface for chat and node management
+4. **Network Layer**: Handles inter-node communication and request routing
 
 ### Core Components
 
-```
+```text
 src/
-├── core/
-│   ├── types.ts                 # Core type definitions
-│   ├── consent-token-manager.ts # Token lifecycle management
-│   ├── credit-manager.ts        # Credit economy implementation
-│   └── credit-types.ts          # Credit system types
-├── crypto/
-│   └── crypto-manager.ts        # Ed25519 cryptographic operations
-├── discovery/
-│   └── discovery-manager.ts     # Opt-in network discovery
-└── index.ts                     # Main system demonstration
+├── services/
+│   ├── ollama.ts           # Ollama integration for local AI models
+│   ├── network.ts          # Network discovery and communication
+│   ├── database.ts         # Node and chat history storage
+│   ├── health.ts           # System health monitoring
+│   └── metrics.ts          # Performance metrics collection
+├── node-agent.ts           # Main node agent server
+└── simple-node-agent.ts    # Simplified standalone version
 
-packages/
-└── accounting/                  # Standalone accounting package
-    ├── src/
-    │   ├── types.ts            # Ledger and balance types
-    │   ├── ledger.ts           # In-memory ledger implementation
-    │   ├── pricing.ts          # Dynamic pricing engine
-    │   └── index.ts            # Package exports
-    └── package.json
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── Chat.tsx        # AI chat interface
+│   │   ├── NodeStatus.tsx  # Node health dashboard
+│   │   ├── Network.tsx     # Network overview
+│   │   ├── Models.tsx      # AI model management
+│   │   └── Settings.tsx    # Node configuration
+│   └── App.tsx             # Main React application
+└── package.json
 
-plans/
-└── feature-*/
-    └── tla/
-        ├── BenevolentSpiderSystem.tla  # TLA+ specification
-        └── BenevolentSpiderSystem.cfg  # TLC model checker config
+docker-compose.ollama.yml   # Complete infrastructure setup
 ```
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ (ES2022 modules support)
-- TypeScript 5.5+
-- npm or yarn
+- Node.js 18+ and npm
+- Docker and Docker Compose (for full setup)
+- Ollama (for local AI models)
 
-### Installation
+### Option 1: Simple Node (Standalone)
 
 ```bash
 # Clone the repository
@@ -73,254 +70,268 @@ cd askee
 # Install dependencies
 npm install
 
-# Build the project
+# Start the simple node agent (no database required)
+npm run dev:simple
+
+# Access the web interface
+open http://localhost:3001
+```
+
+### Option 2: Full Node (With Database)
+
+```bash
+# Clone the repository
+git clone https://github.com/bioduds/askee.git
+cd askee
+
+# Start the complete infrastructure
+docker-compose -f docker-compose.ollama.yml up -d
+
+# Install dependencies and build
+npm install
 npm run build
 
-# Run the demonstration
-npm start
+# Start the node agent
+npm run start:node
+
+# Access the web interface
+open http://localhost:8080
 ```
 
-### Quick Demo
-
-The system includes comprehensive demonstrations:
+### Option 3: Development Setup
 
 ```bash
-npm start
+# Clone the repository
+git clone https://github.com/bioduds/askee.git
+cd askee
+
+# Install dependencies
+npm install
+cd frontend && npm install && cd ..
+
+# Set up environment
+cp .env.example .env
+
+# Start development servers
+npm run dev:node          # Start node agent (terminal 1)
+cd frontend && npm start   # Start React frontend (terminal 2)
 ```
 
-This will run three demonstrations:
+## Using the Network
 
-1. **Basic Workflow** - Discovery → Verification → Token Issuance → Validation
-2. **Multi-User Scenario** - Multiple users with different permission levels
-3. **Credit Economy** - Resource contribution, credit earning, and task execution
+### 1. Install Ollama Models
 
-## Credit Economy
-
-### How It Works
-
-1. **Resource Contribution**: Users share idle resources (CPU, RAM, Storage, Bandwidth)
-2. **Credit Earning**: Contributors earn credits based on:
-   - Resource type (CPU: 1.5x, Storage: 1.0x, etc.)
-   - Amount provided and duration
-   - Utilization rate (how much was actually used)
-   - User reputation (0.8x to 1.0x multiplier)
-
-3. **Credit Spending**: Users spend credits to run computational tasks
-4. **Dynamic Pricing**: Pricing adjusts based on supply and demand
-
-### Base Rates
-
-```typescript
-const baseRates = {
-  CPU: 0.02,        // credits per core per second
-  RAM: 0.001,       // credits per MB per second
-  Storage: 0.0001,  // credits per GB per second
-  Bandwidth: 0.005  // credits per Mbps per second
-};
-```
-
-### Example Credit Flow
-
-```typescript
-// Alice contributes 4 CPU cores for 1 hour at 75% utilization
-const contribution = {
-  nodeId: 'alice_node_1',
-  userId: 'alice',
-  resourceType: 'CPU',
-  amountProvided: 4,
-  duration: 3600,
-  utilizationRate: 0.75
-};
-
-// Alice earns: 4 cores × 3600s × 0.02 rate × 0.75 utilization × 1.5 multiplier = 324 credits
-const creditsEarned = await creditManager.earnCredits(contribution);
-```
-
-## Consent Token System
-
-### Token Lifecycle
-
-1. **Discovery**: Users publish discovery signals on DNS, Well-known URLs, or QR codes
-2. **Verification**: System cryptographically verifies the discovery signals
-3. **Token Issuance**: Verified users can request consent tokens with specific permissions
-4. **Validation**: Tokens are validated before any resource access
-5. **Revocation**: Tokens can be revoked at any time
-
-### Token Structure
-
-```typescript
-interface ConsentToken {
-  tokenId: string;
-  userId: string;
-  permissions: TaskPermissions;
-  resourceLimits: ResourceLimits;
-  expiresAt: Date;
-  issuedAt: Date;
-  revoked: boolean;
-  signature: string; // Ed25519 signature
-}
-```
-
-### Example Usage
-
-```typescript
-// Request a consent token
-const tokenRequest = {
-  userId: 'user123',
-  requestedPermissions: {
-    ml_training: true,
-    data_processing: true,
-    scientific_compute: false
-  },
-  requestedLimits: {
-    CPU: 50,      // 50% CPU
-    RAM: 2048,    // 2GB RAM
-    Storage: 10,  // 10GB Storage
-    Bandwidth: 100 // 100 Mbps
-  },
-  duration: 24, // 24 hours
-  verificationChannel: 'DNS'
-};
-
-const token = await consentTokenManager.issueConsentToken(
-  tokenRequest,
-  verifiedInvitations
-);
-```
-
-## Formal Verification
-
-The system includes a complete TLA+ specification that models:
-
-- **Discovery and verification protocols**
-- **Consent token lifecycle**
-- **Credit economy operations**
-- **Byzantine fault tolerance**
-- **Resource usage and limits**
-
-### Key Invariants
-
-- **NonNegativeBalances**: User credit balances never go negative
-- **Conservation**: Credits are only earned for verified tasks
-- **NoDoubleEarn**: Users cannot earn credits twice for the same task
-- **ConsentBound**: All operations require valid consent tokens
-- **ResourceBounds**: Resource usage never exceeds sandbox limits
-
-### Running TLC Model Checker
+First, install Ollama and pull some models:
 
 ```bash
-cd plans/feature-*/tla/
-java -jar tla2tools.jar -modelcheck -workers 4 BenevolentSpiderSystem.tla
+# Install Ollama (macOS)
+brew install ollama
+
+# Start Ollama service
+ollama serve
+
+# Pull some models (in another terminal)
+ollama pull llama3.2:latest
+ollama pull mistral:latest
+ollama pull codellama:latest
 ```
 
-## Security Features
+### 2. Start Your Node
 
-### Sandboxing
-
-- **OS-specific containers** (Docker on Linux, Hyper-V on Windows)
-- **Resource limits** enforced at the OS level
-- **Network isolation** for untrusted code
-- **File system restrictions** with read-only access where appropriate
-
-### Cryptographic Security
-
-- **Ed25519 signatures** for all consent tokens
-- **SHA-256 hashing** for data integrity
-- **Public key cryptography** for user identification
-- **Replay attack protection** through timestamps and nonces
-
-### Byzantine Fault Tolerance
-
-- **Redundant task execution** across multiple nodes
-- **Consensus-based result verification**
-- **Reputation scoring** based on successful task completions
-- **Automatic node suspension** for detected security violations
-
-## API Reference
-
-### CryptoManager
-
-```typescript
-class CryptoManager {
-  constructor(privateKey?: Uint8Array);
-  getPublicKey(): Uint8Array;
-  getPublicKeyHex(): string;
-  signConsentToken(token: ConsentToken): Promise<string>;
-  verifyConsentToken(token: ConsentToken, publicKey?: Uint8Array): Promise<boolean>;
-  isTokenExpired(token: ConsentToken): boolean;
-}
-```
-
-### CreditManager
-
-```typescript
-class CreditManager {
-  async earnCredits(contribution: Omit<ResourceContribution, 'creditsEarned'>): Promise<number>;
-  async spendCredits(consumption: Omit<ResourceConsumption, 'creditsSpent'>): Promise<boolean>;
-  async canAffordTask(userId: string, requirements: ResourceLimits, duration: number): Promise<boolean>;
-  async getBalance(userId: string): Promise<CreditBalance>;
-  async getNetworkStats(): Promise<NetworkStats>;
-}
-```
-
-### ConsentTokenManager
-
-```typescript
-class ConsentTokenManager {
-  async issueConsentToken(request: ConsentTokenRequest, invitations: VerifiedInvitation[]): Promise<ConsentToken | null>;
-  async validateTokenForTask(token: ConsentToken, taskType: string, requirements: ResourceLimits, issuerPublicKey: Uint8Array): Promise<boolean>;
-  async revokeConsentToken(userId: string, tokenId: string): Promise<boolean>;
-  getActiveTokens(userId: string): ConsentToken[];
-}
-```
-
-## Development
-
-### Project Structure
-
-- **TypeScript** with ES2022 modules
-- **Strict type checking** enabled
-- **Comprehensive error handling**
-- **Modular architecture** ready for microservices
-
-### Building
+Run your Askee node to join the network:
 
 ```bash
-npm run build    # Compile TypeScript
-npm start        # Run demonstration
-npm test         # Run tests (when implemented)
+npm run dev:simple
 ```
 
-### Contributing
+### 3. Access the Web Interface
+
+Open your browser to `http://localhost:3001` (simple node) or `http://localhost:8080` (full node).
+
+### 4. Start Chatting
+
+- Use the **Chat** tab to interact with AI models
+- Visit the **Node Status** tab to monitor your node's health
+- Check the **Network** tab to see other connected nodes
+- Manage models in the **Models** tab
+- Configure settings in the **Settings** tab
+
+## API Endpoints
+
+The node agent exposes a REST API for programmatic access:
+
+```bash
+# Get node information
+curl http://localhost:3001/api/node/info
+
+# Chat with AI models
+curl -X POST http://localhost:3001/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello, how are you?"}'
+
+# Get available models
+curl http://localhost:3001/api/models
+
+# Get network status
+curl http://localhost:3001/api/network/status
+
+# Get node health
+curl http://localhost:3001/health
+
+# Get performance metrics
+curl http://localhost:3001/api/metrics
+```
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file based on `.env.example`:
+
+```env
+# Node Configuration
+NODE_ID=askee-node-dev
+NODE_PORT=8080
+NODE_ENDPOINT=http://localhost:8080
+
+# Ollama Configuration  
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_TIMEOUT=30000
+
+# Database Configuration (for full setup)
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=askee_network
+DB_USER=askee
+DB_PASSWORD=askee_password
+
+# Logging
+LOG_LEVEL=info
+
+# CORS Origins
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
+```
+
+### Docker Configuration
+
+For production deployment, use the provided Docker Compose setup:
+
+```yaml
+# docker-compose.ollama.yml includes:
+- Ollama service with GPU support
+- PostgreSQL database
+- Redis cache  
+- Prometheus metrics
+- Grafana dashboards
+- Node agent with web interface
+```
+
+## How It Works
+
+### Network Discovery
+
+1. Nodes register themselves in a shared database
+2. Each node periodically discovers other active nodes
+3. Health checks ensure only online nodes are available
+4. Load balancing routes requests to the best available node
+
+### Request Routing
+
+1. User sends a chat message through the web interface
+2. Node agent tries to fulfill the request locally using Ollama
+3. If local models are unavailable or overloaded, route to network
+4. Response is returned to the user with model attribution
+
+### Model Management
+
+- **Local Models**: Managed through Ollama, displayed in the Models tab
+- **Network Models**: Automatically discovered from other nodes
+- **Model Pulling**: Pull new models directly through the web interface
+- **Resource Monitoring**: Track model usage and performance
+
+## Network Architecture
+
+```text
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Node A        │    │   Node B        │    │   Node C        │
+│                 │    │                 │    │                 │
+│ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │
+│ │ React UI    │ │    │ │ React UI    │ │    │ │ React UI    │ │
+│ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │
+│ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │
+│ │ Node Agent  │◄┼────┼►│ Node Agent  │◄┼────┼►│ Node Agent  │ │
+│ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │
+│ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │
+│ │ Ollama      │ │    │ │ Ollama      │ │    │ │ Ollama      │ │
+│ │ llama3.2    │ │    │ │ mistral     │ │    │ │ codellama   │ │
+│ │ mistral     │ │    │ │ phi3        │ │    │ │ gemma2      │ │
+│ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         └───────────────────────┼───────────────────────┘
+                                 │
+                    ┌─────────────────┐
+                    │   Database      │
+                    │   (PostgreSQL)  │
+                    │                 │
+                    │ • Node Registry │
+                    │ • Chat History  │
+                    │ • Metrics       │
+                    └─────────────────┘
+```
+
+## Contributing
+
+We welcome contributions! Please see our contributing guidelines:
 
 1. Fork the repository
 2. Create a feature branch
-3. **Write TLA+ specification** for new features
-4. **Verify with TLC** model checker
-5. Implement in TypeScript
-6. Add comprehensive tests
-7. Submit pull request
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
 
-## License
+### Development Workflow
 
-MIT License - see [LICENSE](LICENSE) file for details.
+```bash
+# Set up development environment
+git clone https://github.com/bioduds/askee.git
+cd askee
+npm install
 
-## Acknowledgments
+# Make changes to the code
+# ...
 
-- **TLA+** by Leslie Lamport for formal verification
-- **@noble/ed25519** for cryptographic primitives
-- **The "Benevolent Spider" concept** for consensual distributed computing
+# Build and test
+npm run build
+npm test
+
+# Start development servers
+npm run dev:node      # Backend
+npm run dev:frontend  # Frontend (separate terminal)
+```
 
 ## Roadmap
 
-- [ ] **Docker integration** for production sandboxing
-- [ ] **Kubernetes deployment** for scalable infrastructure
-- [ ] **Web UI** for user interaction
-- [ ] **Mobile app** with QR code discovery
-- [ ] **Smart contract integration** for transparent credit accounting
-- [ ] **Machine learning workload** optimization
-- [ ] **Real-time resource monitoring** and alerting
+- [ ] **Model Marketplace** - Browse and install models from community
+- [ ] **Credit System** - Earn credits for hosting, spend for usage
+- [ ] **Advanced Routing** - Specialized model routing based on request type
+- [ ] **Security Layer** - Authentication and authorization for network access
+- [ ] **Mobile App** - Native mobile client for the network
+- [ ] **Edge Deployment** - Deploy nodes on edge devices and IoT
+- [ ] **Federation** - Connect multiple Askee networks
+- [ ] **Plugin System** - Extend functionality with custom plugins
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Support
+
+- 📝 **Documentation**: [GitHub Wiki](https://github.com/bioduds/askee/wiki)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/bioduds/askee/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/bioduds/askee/discussions)
+- 📧 **Email**: Contact us via GitHub for support requests
 
 ---
 
-**Built with ❤️ for consensual distributed computing**
+**Askee AI Network** - Democratizing AI through distributed intelligence 🤖✨

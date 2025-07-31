@@ -9,9 +9,9 @@ import type {
     CreditBalance,
     ResourceContribution,
     ResourceConsumption
-} from './credit-types.js';
-import type { ResourceLimits } from './types.js';
-import { CryptoManager } from '../crypto/crypto-manager.js';
+} from './credit-types';
+import type { ResourceLimits } from './types';
+import { CryptoManager } from '../crypto/crypto-manager';
 
 export class CreditManager {
     private readonly cryptoManager: CryptoManager;
